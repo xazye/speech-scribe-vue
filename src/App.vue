@@ -1,8 +1,8 @@
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
 
 <template>
-  <main>
-    <router-view/>
+  <AppHeader />
+  <main class="container flex flex-col justify-center items-center flex-grow  ">
+    <router-view />
   </main>
 </template>

@@ -8,6 +8,7 @@ module.exports = {
     './components/**/*.{ts,tsx,vue}',
     './app/**/*.{ts,tsx,vue}',
     './src/**/*.{ts,tsx,vue}',
+    './index.html'
 	],
   prefix: "",
   theme: {
@@ -33,6 +34,29 @@ module.exports = {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
       },
+      fontFamily: {
+        sans: ['Barlow'],
+      },
+      fontSize:{
+        "title":"3rem",
+        "body":"1rem",
+        "small":"0.7rem",
+      },
+      colors:{
+        "primary": {'50': '#eafff7',
+          '100': '#cbffe9',
+          '200': '#9dfdd9',
+          '300': '#5df8c6',
+          '400': '#16dea5',
+          '500': '#00d09a',
+          '600': '#00aa7f',
+          '700': '#008869',
+          '800': '#006b54',
+          '900': '#005847',
+          '950': '#003229',},
+          "background": "#111213",
+          "secondary": "#EF8354",
+        },
     },
   },
   plugins: [animate],

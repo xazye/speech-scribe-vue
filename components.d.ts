@@ -7,18 +7,9 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    Accordion: typeof import('./src/components/ui/accordion/Accordion.vue')['default']
-    AccordionContent: typeof import('./src/components/ui/accordion/AccordionContent.vue')['default']
-    AccordionItem: typeof import('./src/components/ui/accordion/AccordionItem.vue')['default']
-    AccordionTrigger: typeof import('./src/components/ui/accordion/AccordionTrigger.vue')['default']
+    AppHeader: typeof import('./src/components/AppHeader.vue')['default']
     Button: typeof import('./src/components/ui/button/Button.vue')['default']
-    HelloWorld: typeof import('./src/components/HelloWorld.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    UiAccordionAccordion: typeof import('./src/components/ui/accordion/Accordion.vue')['default']
-    UiAccordionAccordionContent: typeof import('./src/components/ui/accordion/AccordionContent.vue')['default']
-    UiAccordionAccordionItem: typeof import('./src/components/ui/accordion/AccordionItem.vue')['default']
-    UiAccordionAccordionTrigger: typeof import('./src/components/ui/accordion/AccordionTrigger.vue')['default']
-    UiButtonButton: typeof import('./src/components/ui/button/Button.vue')['default']
   }
 }
