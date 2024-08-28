@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<Props>(), {
   <Primitive
     :as="as"
     :as-child="asChild"
-    :class="cn(buttonVariants({ variant, size }), props.class)"
+    :class="cn(buttonVariants({ variant, size }), 'bg-transparent shadow-button border duration-300 border-secondary rounded-full px-4 py-2 font-semibold flex flex-row justify-between items-center  text-primary-300 hover:text-secondary hover:border-primary-400 hover:shadow-button-hover' ,props.class)"
   >
     <slot />
   </Primitive>

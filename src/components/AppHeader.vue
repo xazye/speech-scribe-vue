@@ -1,19 +1,18 @@
 <script setup>
-import { PxPlus } from "oh-vue-icons/icons";
-
+import Button from "@/components/ui/button/Button.vue";
 </script>
 <template>
-  <header className="flex flex-row justify-between">
+  <header class="flex flex-row justify-between container py-4">
         <a href="/">
-          <h2 className="text-2xl font-bold">
-            Speech<span className="text-secondary">Scribe</span>
+          <h2 class="text-2xl font-bold">
+            Speech<span class="text-secondary">Scribe</span>
           </h2>
         </a>
         <a href="/">
-          <!-- <Button className="gap-4"> -->
+          <Button class="gap-4" >
             New
-            <v-icon name="px-plus" />
-          <!-- </Button> -->
+            <v-icon name="fa-plus" />
+          </Button>
         </a>
       </header>
 </template>

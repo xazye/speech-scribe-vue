@@ -57,6 +57,12 @@ module.exports = {
           "background": "#111213",
           "secondary": "#EF8354",
         },
+        boxShadow: {
+          'button': 'rgb(0, 0, 0) 0px 10px 13px -7px, 1px 1px 20px 3px rgba(239,131,84,0.27)',
+          'button-hover': 'rgb(0, 0, 0) 0px 10px 13px -7px, 1px 1px 20px 3px rgba(0,136,105,0.27)',
+          'buttonRight':'20px 1px 20px 3px rgba(239,131,84,0.27)',
+          'buttonLeft':'-20px 1px 20px 3px rgba(239,131,84,0.27)',
+        }
     },
   },
   plugins: [animate],
