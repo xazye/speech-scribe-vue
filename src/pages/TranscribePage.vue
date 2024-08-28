@@ -1,3 +1,5 @@
+<script lang="ts" setup>
+</script>
 <template>
     <main className="flex flex-col gap-4 justify-center items-center flex-grow">
       <h1 className="text-4xl sm:text-7xl font-semibold z-10 ">Transcribing

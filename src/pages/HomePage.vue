@@ -2,6 +2,9 @@
 import Button from "@/components/ui/button/Button.vue";
 import { useAudioFileStore } from "@/stores/audioFile";
 import { ref } from "vue";
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const recording = ref(false);
 const mediaRecorder = ref<MediaRecorder | null>(null);
@@ -54,6 +57,11 @@ const handleClick = () => {
     recordAudio();
   }
 }
+
+
+const toggleView= (viewName:string)=> {
+  router.push({ name: viewName });
+  }
 </script>
 <template>
   <h1 class="text-4xl sm:text-7xl font-semibold">
@@ -68,6 +76,15 @@ const handleClick = () => {
       <v-icon name="fa-angle-double-right" class="text-primary-400" scale="1.75" />
       Translate
     </p>
+    <Button class="w-full" @click="toggleView('transcribePage')">
+    transcribe
+    </Button>
+    <Button class="w-full" @click="toggleView('resultsPage')">
+      information
+    </Button>
+    <Button class="w-full" @click="toggleView('filePage')">
+      filePage
+    </Button>
     <Button class="w-full" @click="handleClick">
       Record
       <div class="flex flex-row items-center gap-4">

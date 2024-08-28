@@ -23,7 +23,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["unplugin-vue-router/client"],
     "paths": {
       "@/*": ["./src/*"]
     }
