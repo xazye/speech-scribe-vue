@@ -2,12 +2,15 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useAudioFileStore = defineStore('audioFile', () => {
-  const audioFile = ref<File | null>(null)
+  const audioFile = ref<File | string | null>(null)
   const audioUrl = ref<string | null>(null)
 
-  const setAudioFile = (file: File) => {
-    audioFile.value = file
-    audioUrl.value = URL.createObjectURL(file)
+  const setAudioFile = (file: File|string) => {
+    if (file instanceof File) {
+      audioUrl.value = URL.createObjectURL(file)
+    } else {
+      audioUrl.value = file
+    }
   }
 
   const clearAudioFile = () => {

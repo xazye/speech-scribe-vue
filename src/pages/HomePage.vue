@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Button from "@/components/ui/button/Button.vue";
 import { useAudioFileStore } from "@/stores/audioFile";
-import { ref } from "vue";
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
@@ -10,6 +10,7 @@ const recording = ref(false);
 const mediaRecorder = ref<MediaRecorder | null>(null);
 const chunks = ref<Blob[]>([]);
 const audioURL = ref<string | null>(null);
+const worker = ref<Worker | null>(null);
 
 const audioFileStore = useAudioFileStore();
 
@@ -34,11 +35,9 @@ const recordAudio = async () => {
     mediaRecorder.value.start(100);
     mediaRecorder.value.ondataavailable = (e: BlobEvent) => {
       chunks.value.push(e.data);
-      
     }
-  } else {
-    console.log("no media devices/ not enabled");
   }
+  throw new Error("No audio input device found");
 };
 const stopRecordAudio = async () => {
     recording.value = false;
@@ -54,14 +53,24 @@ const handleClick = () => {
   if (recording.value) {
     stopRecordAudio();
   } else {
-    recordAudio();
+    recordAudio().catch((err) => {
+      console.error(err);
+    });
   }
 }
 
-
 const toggleView= (viewName:string)=> {
   router.push({ name: viewName });
-  }
+};
+onMounted(() => {
+  if (!worker.value) {
+    // Create the worker if it does not yet exist.
+    worker.value = new Worker(new URL('@/whisperer.worker.ts', import.meta.url), {
+        type: 'module'
+    });
+  } 
+  console.log('workerafter', worker.value)
+})
 </script>
 <template>
   <h1 class="text-4xl sm:text-7xl font-semibold">
@@ -69,22 +78,17 @@ const toggleView= (viewName:string)=> {
   </h1>
   <section class="flex flex-col gap-4 justify-center items-center max-w-96 w-full">
     <p
-      class="sm:text-2xl flex flex-row justify-center items-center gap-2 bg-gradient-to-r from-white via-secondary to-primary-600 text-transparent bg-clip-text mb-8">
+      class="sm:text-2xl flex flex-row justify-center items-center gap-2 bg-gradient-to-r from-white via-secondary to-primary-600 text-transparent bg-clip-text mb-8"
+    >
       Record
       <v-icon name="fa-angle-double-right" class="fill-primary-500" scale="1.75" />
       Transcribe
       <v-icon name="fa-angle-double-right" class="text-primary-400" scale="1.75" />
       Translate
     </p>
-    <Button class="w-full" @click="toggleView('transcribePage')">
-    transcribe
-    </Button>
-    <Button class="w-full" @click="toggleView('resultsPage')">
-      information
-    </Button>
-    <Button class="w-full" @click="toggleView('filePage')">
-      filePage
-    </Button>
+    <Button class="w-full" @click="toggleView('transcribePage')"> transcribe </Button>
+    <Button class="w-full" @click="toggleView('resultsPage')"> information </Button>
+    <Button class="w-full" @click="toggleView('filePage')"> filePage </Button>
     <Button class="w-full" @click="handleClick">
       Record
       <div class="flex flex-row items-center gap-4">
@@ -94,9 +98,18 @@ const toggleView= (viewName:string)=> {
     <audio v-if="audioURL" :src="audioURL" controls></audio>
     <p>
       Or
-      <label class="text-primary-300 hover:cursor-pointer hover:text-secondary duration-300" for="upload_file">
+      <label
+        class="text-primary-300 hover:cursor-pointer hover:text-secondary duration-300"
+        for="upload_file"
+      >
         Upload
-        <input @change="handleUpload" id="upload_file" hidden type="file" accept=".mp3,.wav,.ogg" />
+        <input
+          @change="handleUpload"
+          id="upload_file"
+          hidden
+          type="file"
+          accept=".mp3,.wav,.ogg"
+        />
       </label>
       a mp3 file
     </p>
