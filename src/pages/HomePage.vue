@@ -9,7 +9,6 @@ const router = useRouter();
 const recording = ref(false);
 const mediaRecorder = ref<MediaRecorder | null>(null);
 const chunks = ref<Blob[]>([]);
-const audioURL = ref<string | null>(null);
 const worker = ref<Worker | null>(null);
 
 const audioFileStore = useAudioFileStore();
@@ -19,6 +18,7 @@ const handleUpload = (e: Event) => {
   const file = target.files?.[0];
   if (file) {
     audioFileStore.setAudioFile(file);
+    target.value = '';
   }
 };
 
@@ -42,19 +42,18 @@ const recordAudio = async () => {
 const stopRecordAudio = async () => {
     recording.value = false;
     if (!mediaRecorder.value) {return}
-      mediaRecorder.value.stop();
-      mediaRecorder.value.onstop = (e) => {
-        const audioBlob = new Blob(chunks.value, { type: "audio/ogg; codecs=opus" });
-        chunks.value = [];
-        audioURL.value = window.URL.createObjectURL(audioBlob);
-      }
+    mediaRecorder.value.stop();
+    mediaRecorder.value.onstop = (e) => {
+      const audioBlob = new Blob(chunks.value, { type: "audio/ogg; codecs=opus" });
+      chunks.value = [];
+      audioFileStore.setAudioFile(audioBlob);
+    }
 }
 const handleClick = () => {
   if (recording.value) {
     stopRecordAudio();
   } else {
     recordAudio().catch((err) => {
-      console.error(err);
     });
   }
 }
@@ -70,7 +69,54 @@ onMounted(() => {
     });
   } 
   console.log('workerafter', worker.value)
+  const onMessageReceived = async (e: MessageEvent) => {
+      switch (e.data.type) {
+        case 'LOADING_STATUS':
+          // Model file start load: add a new progress item to the list.
+          console.log(['LOADING_STATUS' ,[e.data]]);
+          break;
+
+        case 'TRANSCRIPTION_RESULT':
+          // Model file progress: update one of the progress items.
+          console.log(['TRANSCRIPTION_RESULT' ,[e.data]]); 
+          break;
+
+        // case 'done':
+        //   // Model file loaded: remove the progress item from the list.
+        //   console.log(['done' ,[e.data]]);
+        //   break;
+
+        // case 'ready':
+        //   // Pipeline ready: the worker is ready to accept messages.
+        //   console.log(['ready' ,[e.data]]);
+        //   break;
+
+        // case 'update':
+        //   // Generation update: update the output text.
+        //   console.log(['update' ,[e.data]]);
+        //   break;
+
+        // case 'complete':
+        //   // Generation complete: re-enable the "Translate" button
+        //   console.log(['complete' ,[e.data]]);
+        //   break;
+      }
+    };
+    // Attach the callback function as an event listener.
+    worker.value?.addEventListener('message', onMessageReceived);
+    
+    // worker.value?.postMessage({ status: 'loading',audio: audioURL.value });
 })
+async function audioTesting(){
+  const myAudioBuffer = await audioFileStore.getDecodedAudioBuffer()
+  console.log(myAudioBuffer);
+  let xdd = JSON.stringify(myAudioBuffer)
+  console.log(xdd);
+  worker.value?.postMessage({
+        type: 'INFERENCE_REQUEST',
+        audio: myAudioBuffer,
+      });
+}
 </script>
 <template>
   <h1 class="text-4xl sm:text-7xl font-semibold">
@@ -89,13 +135,14 @@ onMounted(() => {
     <Button class="w-full" @click="toggleView('transcribePage')"> transcribe </Button>
     <Button class="w-full" @click="toggleView('resultsPage')"> information </Button>
     <Button class="w-full" @click="toggleView('filePage')"> filePage </Button>
+    <Button class="w-full" @click="audioTesting">audiotesting </Button>
     <Button class="w-full" @click="handleClick">
       Record
       <div class="flex flex-row items-center gap-4">
         <v-icon name="fa-microphone" class="text-primary-400" scale="1.5" />
       </div>
     </Button>
-    <audio v-if="audioURL" :src="audioURL" controls></audio>
+    <audio v-if="audioFileStore.audioUrl" :src="audioFileStore.audioUrl" controls></audio>
     <p>
       Or
       <label
@@ -104,7 +151,7 @@ onMounted(() => {
       >
         Upload
         <input
-          @change="handleUpload"
+          @input="handleUpload"
           id="upload_file"
           hidden
           type="file"
