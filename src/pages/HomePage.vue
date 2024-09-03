@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Button from "@/components/ui/button/Button.vue";
 import { useAudioFileStore } from "@/stores/audioFile";
+import { useWorkerStore } from "@/stores/workerStore";
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -9,9 +10,9 @@ const router = useRouter();
 const recording = ref(false);
 const mediaRecorder = ref<MediaRecorder | null>(null);
 const chunks = ref<Blob[]>([]);
-const worker = ref<Worker | null>(null);
 
 const audioFileStore = useAudioFileStore();
+const workerStore = useWorkerStore()
 
 const handleUpload = (e: Event) => {
   const target = e.target as HTMLInputElement;
@@ -19,6 +20,7 @@ const handleUpload = (e: Event) => {
   if (file) {
     audioFileStore.setAudioFile(file);
     target.value = '';
+    router.push({ name: 'transcribePage' });
   }
 };
 
@@ -47,6 +49,7 @@ const stopRecordAudio = async () => {
       const audioBlob = new Blob(chunks.value, { type: "audio/ogg; codecs=opus" });
       chunks.value = [];
       audioFileStore.setAudioFile(audioBlob);
+      router.push({ name: 'transcribePage' });
     }
 }
 const handleClick = () => {
@@ -61,62 +64,23 @@ const handleClick = () => {
 const toggleView= (viewName:string)=> {
   router.push({ name: viewName });
 };
+
 onMounted(() => {
-  if (!worker.value) {
-    // Create the worker if it does not yet exist.
-    worker.value = new Worker(new URL('@/whisperer.worker.ts', import.meta.url), {
-        type: 'module'
-    });
-  } 
-  console.log('workerafter', worker.value)
-  const onMessageReceived = async (e: MessageEvent) => {
-      switch (e.data.type) {
-        case 'LOADING_STATUS':
-          // Model file start load: add a new progress item to the list.
-          console.log(['LOADING_STATUS' ,[e.data]]);
-          break;
-
-        case 'TRANSCRIPTION_RESULT':
-          // Model file progress: update one of the progress items.
-          console.log(['TRANSCRIPTION_RESULT' ,[e.data]]); 
-          break;
-
-        // case 'done':
-        //   // Model file loaded: remove the progress item from the list.
-        //   console.log(['done' ,[e.data]]);
-        //   break;
-
-        // case 'ready':
-        //   // Pipeline ready: the worker is ready to accept messages.
-        //   console.log(['ready' ,[e.data]]);
-        //   break;
-
-        // case 'update':
-        //   // Generation update: update the output text.
-        //   console.log(['update' ,[e.data]]);
-        //   break;
-
-        // case 'complete':
-        //   // Generation complete: re-enable the "Translate" button
-        //   console.log(['complete' ,[e.data]]);
-        //   break;
-      }
-    };
-    // Attach the callback function as an event listener.
-    worker.value?.addEventListener('message', onMessageReceived);
-    
-    // worker.value?.postMessage({ status: 'loading',audio: audioURL.value });
+  console.log('workerbefore', workerStore)
+  workerStore.initializeWorker();
+  console.log('workerafter', workerStore)
 })
-async function audioTesting(){
-  const myAudioBuffer = await audioFileStore.getDecodedAudioBuffer()
-  console.log(myAudioBuffer);
-  let xdd = JSON.stringify(myAudioBuffer)
-  console.log(xdd);
-  worker.value?.postMessage({
-        type: 'INFERENCE_REQUEST',
-        audio: myAudioBuffer,
-      });
-}
+
+// async function audioTesting(){
+//   const audioData = await audioFileStore.getDecodedAudioBuffer()
+//   console.log(audioData);
+//   console.log(workerStore.worker);
+//   console.log(workerStore.startTranscribe());
+//   // workerStore.worker?.value.postMessage({
+//   //       type: 'INFERENCE_REQUEST',
+//   //       audioData: audioData,
+//   //     });
+// }
 </script>
 <template>
   <h1 class="text-4xl sm:text-7xl font-semibold">
@@ -135,7 +99,7 @@ async function audioTesting(){
     <Button class="w-full" @click="toggleView('transcribePage')"> transcribe </Button>
     <Button class="w-full" @click="toggleView('resultsPage')"> information </Button>
     <Button class="w-full" @click="toggleView('filePage')"> filePage </Button>
-    <Button class="w-full" @click="audioTesting">audiotesting </Button>
+    <!-- <Button class="w-full" @click="audioTesting">audiotesting </Button> -->
     <Button class="w-full" @click="handleClick">
       Record
       <div class="flex flex-row items-center gap-4">
