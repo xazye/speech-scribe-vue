@@ -1,6 +1,25 @@
-import { AutomaticSpeechRecognitionPipeline, pipeline, PipelineType, env } from '@xenova/transformers';
+import {
+  AutomaticSpeechRecognitionPipeline,
+  pipeline,
+  PipelineType,
+  env,
+  AudioPipelineInputs,
+  ChunkCallbackItem,
+  AutomaticSpeechRecognitionConfig
+} from '@xenova/transformers';
+
 env.allowLocalModels = false;
+
+// https://github.com/xenova/transformers.js/issues/366
+// https://github.com/xenova/transformers.js/issues/142
+//  problem with bundler ? On chrome doesn't work On firefox works
 env.useBrowserCache = false;
+
+
+interface ExtendedASRConfig extends AutomaticSpeechRecognitionConfig {
+  callback_function?: (items: AudioPipelineInputs[]) => void;
+}
+
 // singleton cause expensive
 class MyTranscriptionPipeline {
   static task: PipelineType = 'automatic-speech-recognition';
@@ -11,7 +30,6 @@ class MyTranscriptionPipeline {
     if (this.instance === null) {
       this.instance = await pipeline(this.task, this.model, { progress_callback }) as AutomaticSpeechRecognitionPipeline;
     }
-
     return this.instance;
   }
 }
@@ -25,7 +43,7 @@ self.addEventListener('message', async (event) => {
 
 async function transcribe(audioData: Float32Array) {
   sendLoadingMessage("loading");
-  let pipeline;
+  let pipeline: AutomaticSpeechRecognitionPipeline;
   try {
     pipeline = await MyTranscriptionPipeline.getInstance(load_model_callback);
     if (!pipeline) {
@@ -36,57 +54,47 @@ async function transcribe(audioData: Float32Array) {
     sendLoadingMessage("error");
     return;
   }
-  console.log("pipeline: ", pipeline);
-  console.log("audioData: ", audioData);
-  // throw new Error("Not implemented");
-
-  const time_precision =
+  const time_precision: number =
     pipeline.processor.feature_extractor.config.chunk_length /
     pipeline.model.config.max_source_positions;
 
   let chunks_to_process = [
     {
-      tokens: [],
-      finalised: false,
+      tokens: <Array<number>> [],
+      finalized: <boolean> false,
     },
   ];
-  // https://github.com/xenova/whisper-web/blob/main/src/worker.js#L152
-  // TODO: Storage for fully-processed and merged chunks
-  // let decoded_chunks = [];
-
-  function chunk_callback(chunk) {
+  function chunk_callback(chunk: ChunkCallbackItem) {
     let last = chunks_to_process[chunks_to_process.length - 1];
-
     // Overwrite last chunk with new info
     Object.assign(last, chunk);
-    last.finalised = true;
-
+    last.finalized = true;
     // Create an empty chunk after, if it not the last chunk
     if (!chunk.is_last) {
       chunks_to_process.push({
         tokens: [],
-        finalised: false,
+        finalized: false,
       });
     }
   }
 
-  function callback_function(item) {
+  // idk the type of the item
+  function callback_function(item: AudioPipelineInputs[]) {
+
     let last = chunks_to_process[chunks_to_process.length - 1];
-
     // Update tokens of last chunk
+    // idk the fucking type of the item
+    // @ts-ignore
     last.tokens = [...item[0].output_token_ids];
-
     // Merge text chunks
-    // TODO optimise so we don't have to decode all chunks every time
-    let data = pipeline.tokenizer._decode_asr(chunks_to_process, {
+    // TODO change to decode()
+    let data = (pipeline.tokenizer as any)._decode_asr(chunks_to_process, {
       time_precision: time_precision,
       return_timestamps: true,
       force_full_sequences: false,
     });
-    console.log("callback_function data: ", data);
     self.postMessage({
       type: "UPDATE_TRANSCRIPTION",
-      // task: "automatic-speech-recognition",
       result: data,
     });
   }
@@ -100,15 +108,12 @@ async function transcribe(audioData: Float32Array) {
       return_timestamps: true,
       force_full_sequences: false,
       // Callback functions
-      callback_function: callback_function, // after each generation step
+      // this one fires frequently, after every time_precision of audio; around 0.2s
+      callback_function: callback_function, // after each generation step 
+      // this one fires after every chunk_length, so every 30s of audio
       chunk_callback: chunk_callback, // after each chunk is processed
-    });
-  self.postMessage({ type: 'TRANSCRIPTION_RESULT', result });
-}
-// Callback function for partial results
-function partialChunkCallback(chunk: any) {
-  console.log("Partial result received: ", chunk);
-  // self.postMessage({ type: 'TRANSCRIPTION_PARTIAL_RESULT', chunk });
+    } as ExtendedASRConfig);
+  self.postMessage({ type: 'TRANSCRIPTION_END', result });
 }
 
 function sendLoadingMessage(status: string) {
@@ -121,7 +126,6 @@ function sendDownloadingMessage(
   total: number) {
   self.postMessage({ type: 'DOWNLOADING_STATUS', progress, loaded, total, file });
 }
-
 
 async function load_model_callback(data: {
   status: string;

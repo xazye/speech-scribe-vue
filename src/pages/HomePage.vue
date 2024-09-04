@@ -45,7 +45,7 @@ const stopRecordAudio = async () => {
     recording.value = false;
     if (!mediaRecorder.value) {return}
     mediaRecorder.value.stop();
-    mediaRecorder.value.onstop = (e) => {
+    mediaRecorder.value.onstop = () => {
       const audioBlob = new Blob(chunks.value, { type: "audio/ogg; codecs=opus" });
       chunks.value = [];
       audioFileStore.setAudioFile(audioBlob);
@@ -57,6 +57,7 @@ const handleClick = () => {
     stopRecordAudio();
   } else {
     recordAudio().catch((err) => {
+      console.error(err);
     });
   }
 }
@@ -66,21 +67,9 @@ const toggleView= (viewName:string)=> {
 };
 
 onMounted(() => {
-  console.log('workerbefore', workerStore)
   workerStore.initializeWorker();
-  console.log('workerafter', workerStore)
 })
 
-// async function audioTesting(){
-//   const audioData = await audioFileStore.getDecodedAudioBuffer()
-//   console.log(audioData);
-//   console.log(workerStore.worker);
-//   console.log(workerStore.startTranscribe());
-//   // workerStore.worker?.value.postMessage({
-//   //       type: 'INFERENCE_REQUEST',
-//   //       audioData: audioData,
-//   //     });
-// }
 </script>
 <template>
   <h1 class="text-4xl sm:text-7xl font-semibold">
@@ -96,10 +85,7 @@ onMounted(() => {
       <v-icon name="fa-angle-double-right" class="text-primary-400" scale="1.75" />
       Translate
     </p>
-    <Button class="w-full" @click="toggleView('transcribePage')"> transcribe </Button>
-    <Button class="w-full" @click="toggleView('resultsPage')"> information </Button>
     <Button class="w-full" @click="toggleView('filePage')"> filePage </Button>
-    <!-- <Button class="w-full" @click="audioTesting">audiotesting </Button> -->
     <Button class="w-full" @click="handleClick">
       Record
       <div class="flex flex-row items-center gap-4">
