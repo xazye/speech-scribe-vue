@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Button from "@/components/ui/button/Button.vue";
 import { useAudioFileStore } from "@/stores/audioFile";
+import { useWorkerStore } from "@/stores/workerStore";
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -9,16 +10,17 @@ const router = useRouter();
 const recording = ref(false);
 const mediaRecorder = ref<MediaRecorder | null>(null);
 const chunks = ref<Blob[]>([]);
-const audioURL = ref<string | null>(null);
-const worker = ref<Worker | null>(null);
 
 const audioFileStore = useAudioFileStore();
+const workerStore = useWorkerStore()
 
 const handleUpload = (e: Event) => {
   const target = e.target as HTMLInputElement;
   const file = target.files?.[0];
   if (file) {
     audioFileStore.setAudioFile(file);
+    target.value = '';
+    router.push({ name: 'transcribePage' });
   }
 };
 
@@ -42,12 +44,13 @@ const recordAudio = async () => {
 const stopRecordAudio = async () => {
     recording.value = false;
     if (!mediaRecorder.value) {return}
-      mediaRecorder.value.stop();
-      mediaRecorder.value.onstop = (e) => {
-        const audioBlob = new Blob(chunks.value, { type: "audio/ogg; codecs=opus" });
-        chunks.value = [];
-        audioURL.value = window.URL.createObjectURL(audioBlob);
-      }
+    mediaRecorder.value.stop();
+    mediaRecorder.value.onstop = () => {
+      const audioBlob = new Blob(chunks.value, { type: "audio/ogg; codecs=opus" });
+      chunks.value = [];
+      audioFileStore.setAudioFile(audioBlob);
+      router.push({ name: 'transcribePage' });
+    }
 }
 const handleClick = () => {
   if (recording.value) {
@@ -62,15 +65,11 @@ const handleClick = () => {
 const toggleView= (viewName:string)=> {
   router.push({ name: viewName });
 };
+
 onMounted(() => {
-  if (!worker.value) {
-    // Create the worker if it does not yet exist.
-    worker.value = new Worker(new URL('@/whisperer.worker.ts', import.meta.url), {
-        type: 'module'
-    });
-  } 
-  console.log('workerafter', worker.value)
+  workerStore.initializeWorker();
 })
+
 </script>
 <template>
   <h1 class="text-4xl sm:text-7xl font-semibold">
@@ -86,8 +85,6 @@ onMounted(() => {
       <v-icon name="fa-angle-double-right" class="text-primary-400" scale="1.75" />
       Translate
     </p>
-    <Button class="w-full" @click="toggleView('transcribePage')"> transcribe </Button>
-    <Button class="w-full" @click="toggleView('resultsPage')"> information </Button>
     <Button class="w-full" @click="toggleView('filePage')"> filePage </Button>
     <Button class="w-full" @click="handleClick">
       Record
@@ -95,7 +92,7 @@ onMounted(() => {
         <v-icon name="fa-microphone" class="text-primary-400" scale="1.5" />
       </div>
     </Button>
-    <audio v-if="audioURL" :src="audioURL" controls></audio>
+    <audio v-if="audioFileStore.audioUrl" :src="audioFileStore.audioUrl" controls></audio>
     <p>
       Or
       <label
@@ -104,7 +101,7 @@ onMounted(() => {
       >
         Upload
         <input
-          @change="handleUpload"
+          @input="handleUpload"
           id="upload_file"
           hidden
           type="file"

@@ -1,10 +1,18 @@
 <script setup lang="ts">
+import { onMounted} from 'vue'
 import { ref } from "vue";
-const tab = ref<string>("transcription");
-console.log(tab.value);
+import { useWorkerStore } from '@/stores/workerStore'
 
-  function changeTab(newTab:string) {
-    tab.value = newTab;
+const tab = ref<string>("transcription");
+const workerStore = useWorkerStore()
+
+onMounted(() => {
+  console.log('workerbefore', workerStore)
+  workerStore.initializeWorker();
+  console.log('workerafter', workerStore)
+})
+function changeTab(newTab:string) {
+  tab.value = newTab;
   }
 </script>
 <template>
@@ -37,6 +45,8 @@ console.log(tab.value);
           Translation
         </button>
       </div>
+      <div v-if="tab === 'transcription'">{{workerStore.transcriptionResult}}</div>
+      <div v-if="tab === 'translation'">Translation Here</div>
     </section>
   </main>
 </template>
