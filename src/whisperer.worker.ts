@@ -13,7 +13,7 @@ env.allowLocalModels = false;
 // https://github.com/xenova/transformers.js/issues/366
 // https://github.com/xenova/transformers.js/issues/142
 //  problem with bundler ? On chrome doesn't work On firefox works
-env.useBrowserCache = false;
+env.useBrowserCache = true;
 
 
 interface ExtendedASRConfig extends AutomaticSpeechRecognitionConfig {

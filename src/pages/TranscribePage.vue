@@ -8,7 +8,6 @@ const router = useRouter();
 
 watch(()=>workerStore.transcriptionResult, (newTranscriptionResult ) => {
   if (newTranscriptionResult) {
-    console.log('xddtranscriptiondone');
     router.push({ name: 'resultsPage' });
   }
 })
