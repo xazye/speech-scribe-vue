@@ -2,7 +2,7 @@
 import { onMounted } from "vue";
 import { ref } from "vue";
 import { useWorkerStore } from "@/stores/workerStore";
-
+import TranslateTab from "@/components/TranslateTab.vue";
 const tab = ref<string>("transcription");
 const workerStore = useWorkerStore();
 const workerTranslate = ref<Worker | null>(null);
@@ -68,7 +68,7 @@ async function requestTranslate() {
       <div v-if="tab === 'transcription'">
         {{ workerStore.transcriptionResult }}
       </div>
-      <div v-if="tab === 'translation'">Translation Here</div>
+        <TranslateTab v-if="tab === 'translation'" class="flex flex-row justify-between w-full"/>
     </section>
   </main>
 </template>

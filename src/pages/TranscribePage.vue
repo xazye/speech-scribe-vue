@@ -5,8 +5,8 @@ import { useRouter } from 'vue-router';
 
 const workerStore = useWorkerStore()
 const router = useRouter();
-
-watch(()=>workerStore.transcriptionResult, (newTranscriptionResult ) => {
+    router.push({ name: 'resultsPage' });
+/* watch(()=>workerStore.transcriptionResult, (newTranscriptionResult ) => {
   if (newTranscriptionResult) {
     router.push({ name: 'resultsPage' });
   }
@@ -17,7 +17,7 @@ onMounted(() => {
   console.log('workerafter', workerStore)
   console.log(workerStore.worker);
   workerStore.startTranscribe();
-})
+}) */
 </script>
 <template>
     <main className="flex flex-col gap-4 justify-center items-center flex-grow">
