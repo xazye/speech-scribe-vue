@@ -5,10 +5,9 @@ import { useRouter } from 'vue-router';
 
 const workerStore = useWorkerStore()
 const router = useRouter();
-
-watch(()=>workerStore.transcriptionResult, (newTranscriptionResult ) => {
+    // router.push({ name: 'resultsPage' });
+ watch(()=>workerStore.transcriptionResult, (newTranscriptionResult ) => {
   if (newTranscriptionResult) {
-    console.log('xddtranscriptiondone');
     router.push({ name: 'resultsPage' });
   }
 })
