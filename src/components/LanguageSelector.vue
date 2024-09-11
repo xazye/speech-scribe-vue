@@ -9,8 +9,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ref } from 'vue';
-const sourceLanguage = ref('English')
+import { ref, watch } from 'vue';
+const sourceLanguage = ref('eng_Latn')
+function updateLang(e:Event){
+  console.log('updateLang')
+  console.log(e)
+}
 const LANGUAGES = {
   "Acehnese (Arabic script)": "ace_Arab",
   "Acehnese (Latin script)": "ace_Latn",
@@ -217,10 +221,11 @@ const LANGUAGES = {
   "Yue Chinese": "yue_Hant",
   "Zulu": "zul_Latn",
 }
+watch(sourceLanguage,(x,y)=>{console.log('watcher',x,y)})
 </script>
 <template>
 <div>
-  <Select ">
+  <Select v-model="sourceLanguage" >
     <SelectTrigger>
         <SelectLabel class="pl-0">{{labelText}}:</SelectLabel>
         <SelectValue placeholder="Language" />

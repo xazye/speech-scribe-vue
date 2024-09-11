@@ -2,10 +2,40 @@
 import { onMounted } from "vue";
 import { ref } from "vue";
 import { useWorkerStore } from "@/stores/workerStore";
-import TranslateTab from "@/components/TranslateTab.vue";
+import LanguageSelector from "@/components/LanguageSelector.vue";
+import ScrollArea from "@/components/ui/scroll-area/ScrollArea.vue";
+import  Button from "@/components/ui/button/Button.vue";
 const tab = ref<string>("transcription");
 const workerStore = useWorkerStore();
 const workerTranslate = ref<Worker | null>(null);
+const translationResults = ref<string[]>();
+const onMessageReceived = async (e: MessageEvent) => {
+  switch (e.data.type) {
+    // case "LOADING_STATUS":
+    //   loadingStatus.value = e.data;
+    //   console.log(["LOADING_STATUS", [e.data]]);
+    //   break;
+
+    case "TRANSLATION_END":
+      console.log(["TRANSCRIPTION_RESULT", e.data]);
+      break;
+
+    // case "DOWNLOADING_STATUS":
+    //   downloadingStatus.value.progress = e.data.progress;
+    //   downloadingStatus.value.file = e.data.file;
+    //   console.log(["DOWNLOADING_STATUS", e.data.progress, e.data.file]);
+    //   break;
+    case "UPDATE_TRANSCRIPTION":
+      console.log("Received UPDATE_TRANSCRIPTION e.data:", e.data);
+      console.log("Received UPDATE_TRANSCRIPTION message:", e.data.result);
+      translationResults.value = e.data.result;
+      break;
+
+    default:
+      console.warn("Unknown message type:", e.data.type);
+      break;
+  }
+};
 
 onMounted(() => {
   workerStore.initializeWorker();
@@ -18,28 +48,28 @@ onMounted(() => {
       }
     );
   }
+  workerTranslate.value.addEventListener("message", onMessageReceived);
   console.log(workerTranslate.value);
-
 });
 function changeTab(newTab: string) {
   tab.value = newTab;
 }
-async function requestTranslate() {
-  console.log('Translating');
-  await workerTranslate.value?.postMessage({
+function requestTranslate() {
+  console.log("Translating");
+  workerTranslate.value?.postMessage({
     type: "TRANSLATION_REQUEST",
-    textData: workerStore.transcriptionResult
+    textData: workerStore.transcriptionResult,
   });
-  console.log('AfterTranslating');
+  console.log("AfterTranslating");
 }
 </script>
 <template>
-  <main class="flex flex-col gap-4 justify-center items-center flex-grow">
+  <main class="flex flex-col gap-4 md:justify-center items-center flex-grow">
     <h1 class="text-4xl sm:text-7xl font-semibold z-10">
       Your <span class="text-secondary">Transcription</span>
     </h1>
     <section
-      class="flex flex-col gap-4 justify-center items-center max-w-96 w-full"
+      class="flex flex-col gap-4 justify-center items-center max-w-[1024px] w-full"
     >
       <div class="max-w-96 w-full grid grid-cols-2 items-center">
         <button
@@ -54,7 +84,7 @@ async function requestTranslate() {
           Transcription
         </button>
         <button
-          @click="changeTab('translation'); requestTranslate();"
+          @click="changeTab('translation')"
           class="px-4 py-2 border rounded-full font-semibold border-l-0 rounded-l-none shadow-buttonRight duration-300"
           :class="
             tab === 'translation'
@@ -65,10 +95,29 @@ async function requestTranslate() {
           Translation
         </button>
       </div>
+
       <div v-if="tab === 'transcription'">
-        {{ workerStore.transcriptionResult }}
+        <ScrollArea class="h-[200px]">
+          {{ workerStore.transcriptionResult }}
+        </ScrollArea>
       </div>
-        <TranslateTab v-if="tab === 'translation'" class="flex flex-row justify-between w-full"/>
+      <div v-if="tab === 'translation'" class="flex w-full flex-col">
+        <div class="flex flex-col justify-between w-full gap-4 md:flex-row">
+          <div class="md:basis-1/2">
+            <LanguageSelector labelText="Source" />
+            <ScrollArea class="h-[20dvh] md:h-[200px]">
+              <p>{{ workerStore.transcriptionResult }}</p>
+            </ScrollArea>
+          </div>
+          <div class="md:basis-1/2">
+            <LanguageSelector labelText="Target" />
+            <ScrollArea class="h-[20dvh] md:h-[200px]">
+              <p v-if="translationResults">{{ translationResults }}</p>
+            </ScrollArea>
+          </div>
+        </div>
+        <Button class="justify-center w-fit mx-auto my-4" @click="requestTranslate">Translate</Button>
+      </div>
     </section>
   </main>
 </template>

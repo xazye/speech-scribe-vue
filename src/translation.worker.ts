@@ -37,16 +37,20 @@ async function translate(textData: string | string[]) {
       console.error("Error initializing pipeline:", error);
       return;
     }
-    console.log("pipeline", pipeline);
-    console.log("textData", textData); 
+    // console.log("pipeline", pipeline);
+    // console.log("textData", textData); 
     let result = await pipeline(textData, { 
         tgt_lang: LANGUAGES.Polish,
         src_lang: LANGUAGES.English,
         callback_function: x => {
-            console.log("partial output callback_function", x);
-        },
+          self.postMessage({
+              type: 'UPDATE_TRANSCRIPTION',
+              result: pipeline.tokenizer.decode(x[0].output_token_ids, { skip_special_tokens: true })
+          });
+      }
     });
     console.log("result", result);  
+    self.postMessage({ type: 'TRANSLATION_END', result });
 }
 
 function load_model_callback(data){
