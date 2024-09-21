@@ -2,6 +2,7 @@
 import { onMounted, watch} from 'vue'
 import { useWorkerStore } from '@/stores/workerStore'
 import { useRouter } from 'vue-router';
+import { Progress } from "@/components/ui/progress"
 
 const workerStore = useWorkerStore()
 const router = useRouter();
@@ -10,6 +11,11 @@ const router = useRouter();
   if (newTranscriptionResult) {
     router.push({ name: 'resultsPage' });
   }
+})
+watch(
+  workerStore.downloadingStatus,
+  (newProgress) => {
+     console.log('watcher',newProgress);
 })
 onMounted(() => {
   console.log('workerbefore', workerStore)
@@ -28,9 +34,14 @@ onMounted(() => {
         </h1>
       <section className="flex flex-col gap-4 justify-center items-center max-w-96 w-full">
         <p className="z-10 sm:text-2xl flex flex-row justify-center items-center gap-2 bg-gradient-to-r from-white  to-primary-600 text-transparent bg-clip-text mb-8 animate-pulse">
-          
+        Waking the genie up...
         </p>
-          <div >
+         <div class="w-full z-10" v-for="(item,index) in workerStore.downloadingStatus" :key="index">
+          <Progress :model-value="item.progress" />
+          <span>{{ index }}</span>
+         </div>
+
+          <div class="">
             <div className="circle"></div>
             <div className="circle"></div>
             <div className="circle"></div>
