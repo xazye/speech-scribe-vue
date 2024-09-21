@@ -5,10 +5,12 @@ import { useWorkerStore } from "@/stores/workerStore";
 import LanguageSelector from "@/components/LanguageSelector.vue";
 import ScrollArea from "@/components/ui/scroll-area/ScrollArea.vue";
 import  Button from "@/components/ui/button/Button.vue";
+import { Progress } from "@/components/ui/progress"
 const tab = ref<string>("transcription");
 const workerStore = useWorkerStore();
 const workerTranslate = ref<Worker | null>(null);
 const translationResults = ref<string[]>();
+const translationDownloadingStatus = ref<any>({});
 const onMessageReceived = async (e: MessageEvent) => {
   switch (e.data.type) {
     // case "LOADING_STATUS":
@@ -30,7 +32,21 @@ const onMessageReceived = async (e: MessageEvent) => {
       console.log("Received UPDATE_TRANSCRIPTION message:", e.data.result);
       translationResults.value = e.data.result;
       break;
-
+      case "DOWNLOADING_STATUS":
+        // downloadingStatus.value.progress = e.data.progress;
+        // downloadingStatus.value.file = e.data.file;
+        // downloadingStatus.value.total = e.data.total;
+        console.log(["DOWNLOADING_STATUS", e.data.progress, e.data.file]);
+        translationDownloadingStatus.value[e.data.file] = {
+          progress: e.data.progress,
+        };
+        break;
+      case "DOWNLOADING_START_STATUS":
+        console.log(["DOWNLOADING_START_STATUS", e.data.file]);
+        translationDownloadingStatus.value[e.data.file] = {
+          progress: 0,
+        };
+      break;
     default:
       console.warn("Unknown message type:", e.data.type);
       break;
@@ -97,7 +113,7 @@ function requestTranslate() {
       </div>
 
       <div v-if="tab === 'transcription'">
-        <ScrollArea class="h-[200px]">
+        <ScrollArea class="h-[59dvh]">
           {{ workerStore.transcriptionResult }}
         </ScrollArea>
       </div>
@@ -111,9 +127,13 @@ function requestTranslate() {
           </div>
           <div class="md:basis-1/2">
             <LanguageSelector labelText="Target" />
-            <ScrollArea class="h-[20dvh] md:h-[200px]">
-              <p v-if="translationResults">{{ translationResults }}</p>
+            <ScrollArea class="h-[20dvh] md:h-[200px]" v-if="translationResults">
+              <p >{{ translationResults }}</p>
             </ScrollArea>
+            <div v-else class="w-full z-10 flex flex-col" v-for="(item,index) in translationDownloadingStatus" :key="index">
+              <Progress :model-value="item.progress" />
+              <span>{{ index }}</span>
+             </div>
           </div>
         </div>
         <Button class="justify-center w-fit mx-auto my-4" @click="requestTranslate">Translate</Button>

@@ -29,8 +29,8 @@ html{
 }
 .circle {
     position: absolute;
-    left: calc(50% - 25px);
-    top: calc(50% - 25px);
+    left: calc(49% - 25px);
+    top: calc(49% - 25px);
     height: 50px;
     width: 50px;
     border-radius: 100%;
@@ -39,6 +39,7 @@ html{
     background-size: 300% 300%;
     box-shadow: rgb(0, 0, 0) 0px 10px 13px -7px, 1px 1px 20px 3px;
     color:#16dea5;
+  overflow: hidden;
   }
   
   .circle:nth-child(1) {

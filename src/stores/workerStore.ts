@@ -7,7 +7,8 @@ export const useWorkerStore = defineStore("workerStore", () => {
   const worker = ref<Worker | null>(null);
   const loadingStatus = ref(null);
   const transcriptionResult = ref(null);
-  const downloadingStatus = ref({ progress: 0, file: null });
+  // const downloadingStatus = ref<{ progress: 0; file: null; }[]>([]);
+  const downloadingStatus = ref<any>({});
 
   // Initialize the worker and set up event listeners
   function initializeWorker() {
@@ -37,10 +38,21 @@ export const useWorkerStore = defineStore("workerStore", () => {
         break;
 
       case "DOWNLOADING_STATUS":
-        downloadingStatus.value.progress = e.data.progress;
-        downloadingStatus.value.file = e.data.file;
+        // downloadingStatus.value.progress = e.data.progress;
+        // downloadingStatus.value.file = e.data.file;
+        // downloadingStatus.value.total = e.data.total;
+        console.log('innerpinestatus',downloadingStatus)
         console.log(["DOWNLOADING_STATUS", e.data.progress, e.data.file]);
+        downloadingStatus.value[e.data.file] = {
+          progress: e.data.progress,
+        };
         break;
+      case "DOWNLOADING_START_STATUS":
+        // console.log(["DOWNLOADING_START_STATUS", e.data.file]);
+        downloadingStatus.value[e.data.file] = {
+          progress: 0,
+        };
+      break;
         case "UPDATE_TRANSCRIPTION":
         console.log("Received UPDATE_TRANSCRIPTION message:", e.data.result[0]);
         transcriptionResult.value = e.data.result[0];
