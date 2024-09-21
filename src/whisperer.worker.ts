@@ -127,6 +127,10 @@ function sendDownloadingMessage(
   self.postMessage({ type: 'DOWNLOADING_STATUS', progress, loaded, total, file });
 }
 
+function sendDownloadingStartMessage(
+  file: string) {
+  self.postMessage({ type: 'DOWNLOADING_START_STATUS', file });
+}
 async function load_model_callback(data: {
   status: string;
   file: string;
@@ -142,7 +146,13 @@ async function load_model_callback(data: {
   // console.log("load_model_callback", data);
   const { status } = data;
   if (status === "progress") {
+  console.log("load_model_callback progress", data);
     const { file, progress, loaded, total } = data;
     sendDownloadingMessage(file, progress, loaded, total);
+  }
+  if (status === "initiate") {
+  // console.log("load_model_callback initiate", data);
+    const { file } = data;
+    sendDownloadingStartMessage(file);
   }
 }
